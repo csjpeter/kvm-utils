@@ -174,21 +174,6 @@ main()
     # Main logic
     #
 
-    #if ! sudo virsh iface-list --all | grep -w "$bridge_name" &>/dev/null; then
-    #    log_debug "Creating bridge interface $bridge_name"
-    #    sudo virsh iface-define "$bridge_name"
-    #    if [ $? -ne 0 ]; then
-    #        log_error "Failed to define interface $bridge_name"
-    #        return 1
-    #    fi
-    #    log_debug "Starting bridge interface $bridge_name"
-    #    sudo virsh iface-start "$bridge_name"
-    #    if [ $? -ne 0 ]; then
-    #        log_error "Failed to start interface $bridge_name"
-    #        return 1
-    #    fi
-    #fi
-
     if ! sudo virsh net-list --all | grep -w "$network_name" &>/dev/null; then
         local tmp_xml=$(mktemp)
         trap 'rm -f "$tmp_xml"' EXIT

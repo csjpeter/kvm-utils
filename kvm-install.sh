@@ -67,6 +67,10 @@ main()
             install_kvm "$@"
             return $?
             ;;
+        -h|--help|help)
+            print_help
+            return 0
+            ;;
         *)
             log_error "Unknown action: $action"
             return 1

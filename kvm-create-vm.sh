@@ -22,8 +22,19 @@ TMP_CLOUD_INIT_META_DATA_FILE="${TMP_CLOUD_INIT_SEED_DIRECTORY}/meta-data"
 TMP_CLOUD_INIT_SEED_FILE="$(mktemp -u /tmp/kvm-create-vm.XXXXXX-seed.iso)"
 
 declare -A ETHERNET_IFC_ON_IMAGE=(
+    ["debian11"]="ens3"
+    ["debian12"]="ens3"
+    ["ubuntu20"]="ens3"
     ["ubuntu22"]="enp1s0"
     ["ubuntu24"]="enp1s0"
+    ["centos8"]="ens3"
+    ["centos9-stream"]="ens3"
+    ["rocky8"]="ens3"
+    ["rocky9"]="ens3"
+    ["fedora37"]="ens3"
+    ["fedora38"]="ens3"
+    ["fedora39"]="ens3"
+    ["fedora40"]="ens3"
 )
 
 print_help()
@@ -146,6 +157,7 @@ users:
     expiredate: '2100-01-01'
     ssh-authorized-keys:
       - $public_key
+    plain_text_passwd: pwd
 disable_root: true
 
 runcmd:
@@ -240,11 +252,15 @@ function create_vm()
 
     find_libvirt_network_by_bridge "$bridge"
     if [ $? -ne 0 ]; then
-        log_error "Failed to find libvirt network for bridge $bridge."
+        log_error "Failed to find libvirt network for ip address $VM_IP."
         return 1
     fi
     local network=${RETURNED_NETWORK_NAME}
     log_info "Network name: $network"
+    if [ -z "$network" ]; then
+        log_error "No libvirt network found for ip ${VM_IP}. Use kvm-net.sh to create a network."
+        return 1
+    fi
 
     # if ethernet interfaces is not specified, pick a default from
     # the ETHERNET_IFC_ON_IMAGE array

@@ -15,10 +15,11 @@ This script manages KVM networks using libvirt.
 It can create, destroy, and list networks.
 
 Actions:
-    define                   Define and start a new network
-    undefine                 Destroy and undefine an existing network
-    redefine                 Destroy and redefine a network
-    help                     Show this help message and exit
+    define                   Define and start a new network.
+    undefine                 Destroy and undefine an existing network.
+    redefine                 Destroy and redefine a network.
+    list                     List available networks.
+    help                     Show this help message and exit.
 
 EOF
 }
@@ -61,6 +62,13 @@ main()
             fi
             ${MYDIR}/kvm-net-define.sh "$@"
             return $?
+            ;;
+        list)
+            sudo virsh net-list --all
+            if [ $? -ne 0 ]; then
+                log_error "Failed to list networks."
+                return 1
+            fi
             ;;
         help)
             print_help

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# kvm-setup.sh - Basic KVM/libvirt setup script for Rocky Linux 9
+# kvm-uninstall-webui.sh - Uninstalls Cockpit WebUI for KVM/libvirt on Rocky Linux 9
 #
 
 set -o pipefail
@@ -11,12 +11,12 @@ source "$MYDIR/kvm-include.sh"
 
 print_help() {
     cat <<EOF
-This script uninstalls KVM and libvirt virtualization.
+This script uninstalls Cockpit WebUI for KVM and libvirt.
 
 Usage: $0 <action> [OPTIONS]
 
 Actions:
-  sure           Yes, do remove KVM and libvirt
+  sure            Yes, do remove Cockpit WebUI for KVM and libvirt
 
 Options:
   -h, --help     Show this help message and exit
@@ -24,27 +24,27 @@ Options:
 EOF
 }
 
-uninstall_kvm()
+uninstall_webui()
 {
-    log_info "Stopping and disabling libvirtd service..."
+    log_info "Stopping and disabling Cockpit service..."
 
-    sudo systemctl stop libvirtd
+    sudo systemctl stop cockpit.socket
     if [ $? -ne 0 ]; then
-        log_error "Failed to stop libvirtd service."
+        log_error "Failed to stop Cockpit service."
         return 1
     fi
 
-    sudo systemctl disable libvirtd
+    sudo systemctl disable cockpit.socket
     if [ $? -ne 0 ]; then
-        log_error "Failed to disable libvirtd service."
+        log_error "Failed to disable Cockpit service."
         return 1
     fi
 
-    log_info "Uninstalling KVM and libvirt packages..."
+    log_info "Uninstalling Cockpit Web UI..."
 
-    sudo dnf remove -y qemu-kvm libvirt bridge-utils virt-install virt-viewer libvirt-daemon-kvm
+    sudo dnf remove -y cockpit cockpit-machines
     if [ $? -ne 0 ]; then
-        log_error "Failed to uninstall KVM and libvirt packages."
+        log_error "Failed to uninstall Cockpit Web UI."
         return 1
     fi
 
@@ -54,7 +54,7 @@ uninstall_kvm()
         return 1
     fi
 
-    log_info "KVM and libvirt uninstalled."
+    log_info "Cockpit Web UI uninstalled."
 }
 
 main()
@@ -68,7 +68,7 @@ main()
     shift
     case "$action" in
         sure)
-            uninstall_kvm
+            uninstall_webui "$@"
             return $?
             ;;
         -h|--help|help)

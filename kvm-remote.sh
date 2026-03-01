@@ -19,10 +19,13 @@ Usage: $0 <remote> <action> [arguments to pass to the remote script]
 Actions:
   install         Installs or uninstalls KVM and libvirt.
   remove          Removes KVM and libvirt.
+  install-webui   Installs Cockpit WebUI for KVM.
+  uninstall-webui Uninstalls Cockpit WebUI for KVM.
   net             Configure network bridge for KVM with libvirt.
   import          Import a cloud image into KVM.
   create          Create a new virtual machine.
   delete          Delete a virtual machine.
+  list            List all virtual machines.
 
 Options:
   -h, --help     Show this help message and exit
@@ -128,6 +131,16 @@ main()
             execute_utility_on_remote "$remote" kvm-uninstall.sh "$@"
             return $?
             ;;
+        install-webui)
+            install_utility_to_remote "$remote" kvm-include.sh kvm-install-webui.sh
+            execute_utility_on_remote "$remote" kvm-install-webui.sh "$@"
+            return $?
+            ;;
+        uninstall-webui)
+            install_utility_to_remote "$remote" kvm-include.sh kvm-uninstall-webui.sh
+            execute_utility_on_remote "$remote" kvm-uninstall-webui.sh "$@"
+            return $?
+            ;;
         net)
             install_utility_to_remote "$remote" kvm-include.sh kvm-net.sh kvm-net-define.sh kvm-net-undefine.sh
             execute_utility_on_remote "$remote" kvm-net.sh "$@"
@@ -146,6 +159,11 @@ main()
         delete)
             install_utility_to_remote "$remote" kvm-include.sh kvm-delete-vm.sh
             execute_utility_on_remote "$remote" kvm-delete-vm.sh "$@"
+            return $?
+            ;;
+        list)
+            install_utility_to_remote "$remote" kvm-include.sh kvm-list.sh
+            execute_utility_on_remote "$remote" kvm-list.sh "$@"
             return $?
             ;;
         help|-h|--help)

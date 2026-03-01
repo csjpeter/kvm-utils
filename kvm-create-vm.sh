@@ -45,7 +45,15 @@ This script creates KVM virtual machine by libvirt.
 Usage: $0 <template_image_name> <name> <ip> [OPTIONS]
 
 Arguments:
-    <template_image_name>  Name of the template image to use
+    <template_image_name>  Name of a cloud image previously imported with
+                           kvm-import-image.sh. Known images and their
+                           default ethernet interface names:
+EOF
+    for image in "${!ETHERNET_IFC_ON_IMAGE[@]}"; do
+        local ifc="${ETHERNET_IFC_ON_IMAGE[$image]}"
+        echo "                               $image (${ifc})"
+    done
+cat <<EOF
     <name>                 Name of the virtual machine
     <ip>                   IP address of the virtual machine
 
@@ -54,16 +62,10 @@ Options:
     --ram <size>           Specify the RAM size for the VM (default: 2048).
     --disk-size <size>     Specify the disk size for the VM (default: 20G).
     --admin-user <name>    Specify the admin user for the VM (default: $USER).
-    --ethernet-ifc <name>  Specify the ethernet interface name.
-                           Defaults:
-EOF
-    for image in "${!ETHERNET_IFC_ON_IMAGE[@]}"; do
-        local ifc="${ETHERNET_IFC_ON_IMAGE[$image]}"
-        echo "                               $image: ${ifc}"
-    done
-cat <<EOF
+    --ethernet-ifc <name>  Override the default ethernet interface name.
+
 Example:
-    $0 default 192.168.122.0/24
+    $0 ubuntu24 my-vm 192.168.122.10
 
 EOF
 }

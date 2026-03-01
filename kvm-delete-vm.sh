@@ -55,6 +55,13 @@ function delete_vm()
         log_error "Failed to delete virtual machine ${VM_NAME} volume"
         return 1
     fi
+
+    log_info "Removing ${VM_NAME} from /etc/hosts."
+    sudo sed -i "/ ${VM_NAME}$/d" /etc/hosts
+    if [ $? -ne 0 ]; then
+        log_error "Failed to remove ${VM_NAME} from /etc/hosts."
+        return 1
+    fi
 }
 
 function parse_args()

@@ -10,7 +10,7 @@ VM_NAME=""
 VM_IP=""
 VM_IMAGE=""
 VCPUS=1
-RAM=3072
+RAM=3072   # stored in MiB for virt-install
 DISK_SIZE=20G
 ADMIN_USER=$USER
 ETHERNET_IFC=""
@@ -58,16 +58,31 @@ cat <<EOF
     <ip>                   IP address of the virtual machine
 
 Options:
-    --vcpus <size>         Specify the number of vCPUs for the VM (default: 1).
-    --ram <size>           Specify the RAM size for the VM (default: 2048).
-    --disk-size <size>     Specify the disk size for the VM (default: 20G).
-    --admin-user <name>    Specify the admin user for the VM (default: $USER).
-    --ethernet-ifc <name>  Override the default ethernet interface name.
+    --vcpus=<size>         Specify the number of vCPUs for the VM (default: 1).
+    --ram=<size>           Specify the RAM size for the VM (default: 3G). Accepts M or G suffix (e.g. 512M, 2G) or plain MiB number.
+    --disk-size=<size>     Specify the disk size for the VM (default: 20G).
+    --admin-user=<name>    Specify the admin user for the VM (default: $USER).
+    --ethernet-ifc=<name>  Override the default ethernet interface name.
 
 Example:
     $0 ubuntu24 my-vm 192.168.122.10
 
 EOF
+}
+
+function ram_to_mib()
+{
+    local val="$1"
+    if [[ "$val" =~ ^([0-9]+)[Gg]$ ]]; then
+        RAM=$(( ${BASH_REMATCH[1]} * 1024 ))
+    elif [[ "$val" =~ ^([0-9]+)[Mm]$ ]]; then
+        RAM=${BASH_REMATCH[1]}
+    elif [[ "$val" =~ ^([0-9]+)$ ]]; then
+        RAM=${BASH_REMATCH[1]}
+    else
+        log_error "Invalid RAM value '$val'. Use a plain MiB number or suffix M/G (e.g. 512M, 2G)."
+        return 1
+    fi
 }
 
 function wait_for_ssh()
@@ -323,6 +338,14 @@ function create_vm()
     echo "Checking IP address:"
     sudo virsh domifaddr ${VM_NAME} --interface ${ETHERNET_IFC}
 
+    log_info "Adding $VM_NAME ($VM_IP) to /etc/hosts."
+    sudo sed -i "/ ${VM_NAME}$/d" /etc/hosts
+    echo "${VM_IP} ${VM_NAME}" | sudo tee -a /etc/hosts > /dev/null
+    if [ $? -ne 0 ]; then
+        log_error "Failed to add $VM_NAME to /etc/hosts."
+        return 1
+    fi
+
     wait_for_ssh
     if [ $? -ne 0 ]; then
         log_error "Failed to connect to VM $VM_NAME via SSH."
@@ -331,11 +354,12 @@ function create_vm()
 
     echo "SSH is available on the VM."
 
-    echo "Dropping obsolote keys from known_hosts for ip ${VM_IP}."
+    echo "Dropping obsolete keys from known_hosts for ${VM_NAME} (${VM_IP})."
     ssh-keygen -R "${VM_IP}"
+    ssh-keygen -R "${VM_NAME}"
 
-    echo "Adding the host keys of ${VM_NAME} at ${VM_IP} to known_hosts."
-    ssh-keyscan ${VM_IP} >> ~/.ssh/known_hosts
+    echo "Adding the host keys of ${VM_NAME} (${VM_IP}) to known_hosts."
+    ssh-keyscan "${VM_IP}" "${VM_NAME}" >> ~/.ssh/known_hosts
 
     log_info "Virtual machine $VM_NAME created successfully."
 }
@@ -405,6 +429,10 @@ function parse_args()
                 RAM="${1#--ram=}"
                 if [ "$RAM" == "" ]; then
                     log_error "RAM size cannot be empty"
+                    return 1
+                fi
+                ram_to_mib "$RAM"
+                if [ $? -ne 0 ]; then
                     return 1
                 fi
                 shift

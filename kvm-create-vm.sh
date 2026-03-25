@@ -179,7 +179,7 @@ disable_root: true
 
 runcmd:
   - mkdir -p /home/${ADMIN_USER}/.ssh
-  - ssh-keygen -t rsa -b 4096 -f /home/${ADMIN_USER}/.ssh/id_rsa -N ""
+  - ssh-keygen -t rsa -b 4096 -f /home/${ADMIN_USER}/.ssh/id_rsa -N "" -C "${ADMIN_USER}@${VM_NAME}"
   - chown -R ${ADMIN_USER}:${ADMIN_USER} /home/${ADMIN_USER}/.ssh
   - chmod 700 /home/${ADMIN_USER}/.ssh
   - chmod 600 /home/${ADMIN_USER}/.ssh/id_rsa
